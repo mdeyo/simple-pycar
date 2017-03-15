@@ -28,7 +28,7 @@ class Car(pygame.sprite.Sprite):
         self.screen = screen
         self.width = 50
         self.length = 100
-        self.originalImage = pygame.image.load("red_car.png").convert_alpha()
+        self.originalImage = pygame.image.load("images/red_car.png").convert_alpha()
         self.originalImage = pygame.transform.scale(self.originalImage,(self.length,self.width))
         self.image = self.originalImage.copy() # The variable that is changed whenever the car is rotated.
         self.rect = self.image.get_rect()
