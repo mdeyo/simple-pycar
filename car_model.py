@@ -16,6 +16,19 @@ def dampenSteering(angle,elasticity,delta):
             new_angle = 0
         return new_angle
 
+def dampenSpeed(speed,velocity_dampening,delta):
+    if speed == 0:
+        new_speed = 0
+    elif speed > 0:
+        new_speed = speed - velocity_dampening*delta*(speed/10)
+        if new_speed <= 0:
+            new_speed = 0
+    elif speed < 0:
+        new_speed = speed + velocity_dampening*delta*(speed/10)
+        if new_speed >= 0:
+            new_speed = 0
+    return int(new_speed)
+
 class Car(pygame.sprite.Sprite):
     def __init__(self, color, x, y,screen):
         pygame.sprite.Sprite.__init__(self)
@@ -35,6 +48,7 @@ class Car(pygame.sprite.Sprite):
         self.rect.center = (x, y)
         self.maxSteer = math.pi/3
         self.acceleration_rate = 5
+        self.speed_dampening = 0.1
         self.maxSpeed = 300;
         self.steering_elasticity = 5
         self.gear = "STOP"
@@ -62,7 +76,7 @@ class Car(pygame.sprite.Sprite):
             if self.speed >=0:
                 self.speed = 0;
 
-        print('gear: '+self.gear+' speed:'+str(self.speed))
+        # print('gear: '+self.gear+' speed:'+str(self.speed))
 
     def release_down(self,direction):
         if direction>0 and self.gear == "R":
@@ -85,11 +99,13 @@ class Car(pygame.sprite.Sprite):
 
         self.angle += self.steering_angle*delta*self.speed/100
 
-        self.steering_angle = dampenSteering(self.steering_angle,self.steering_elasticity,delta)
         self.vel[0] = math.cos(self.angle)*self.speed
         self.vel[1] = math.sin(self.angle)*self.speed
         self.pose[0] += self.vel[0]*delta
         self.pose[1] += self.vel[1]*delta
+
+        self.steering_angle = dampenSteering(self.steering_angle,self.steering_elasticity,delta)
+        self.speed = dampenSpeed(self.speed,self.speed_dampening,delta)
 
         # img = pygame.draw.rect(self.screen,self.color,[self.pose[0],self.pose[1],80,50],2)
         # car_img = self.originalImage.copy()
