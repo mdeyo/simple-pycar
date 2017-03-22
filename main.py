@@ -68,6 +68,7 @@ def updateSpeedometer(screen,car):
     speed_text = font.render("Speed: "+str(car.speed/5), True, BLACK)
     screen.blit(speed_text, [300, 60])
 
+screen.fill(WHITE)
 
 
 # -------- Main Program Loop -----------
@@ -114,7 +115,11 @@ while not done:
 
     # First, clear the screen to white. Don't put other drawing commands
     # above this, or they will be erased with this command.
+
+
     screen.fill(WHITE)
+
+
     # Draw a rectangle
     # pygame.draw.rect(screen, BLACK, [20, 20, 250, 100], 2)
     # Draw an ellipse, using a rectangle as the outside boundaries
