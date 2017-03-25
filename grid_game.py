@@ -12,6 +12,9 @@
 
 
 from nn import neural_net, LossHistory
+import timeit
+import random
+import numpy as np
 
 
 X_DIM, Y_DIM = (5, 5)
@@ -23,14 +26,15 @@ class World():
         self.car = car
         self.goal_reward = goal_reward
         self.step_cost = step_cost
+        self.state = grid.grid
 
     def updateState(self, action):
         if action in self.car.getAvailableActions():
             self.car.takeAction(action)
-            return(self.state, 10)
+            return(-10, self.grid.getState())
 
         else:  # action not avaialble - penalize -500
-            return (self.state, -500)
+            return (-500, self.grid.getState())
 
 
 class Grid():
@@ -38,6 +42,15 @@ class Grid():
         self.w = w
         self.h = h
         self.grid = [[0 for x in range(w)] for y in range(h)]
+
+    def getState(self):
+        state = []
+        for row in self.grid:
+            state.extend(row)
+        state = np.transpose(np.array(state))
+        state = state.reshape(1, 25)
+        # print(state.shape)
+        return state
 
     def addCar(self, car):
         self.car = car
@@ -151,6 +164,8 @@ car = Car(grid, 0, 0)
 
 grid.printGrid()
 
+print(grid.getState())
+
 print(car.getAvailableActions())
 
 
@@ -185,7 +200,8 @@ def train_net(model, params):
     game_state = World(grid, car, 500, 10)
 
     # Get initial state by doing nothing and getting the state.
-    _, state = game_state.frame_step((2))
+    #_, state = game_state.frame_step((2))
+    _, state = game_state.updateState(0)
 
     # Let's time it.
     start_time = timeit.default_timer()
@@ -205,7 +221,8 @@ def train_net(model, params):
             action = (np.argmax(qval))  # best
 
         # Take action, observe new state and get our treat.
-        reward, new_state = game_state.frame_step(action)
+        #reward, new_state = game_state.frame_step(action)
+        reward, new_state = game_state.updateState(action)
 
         # Experience replay storage.
         replay.append((state, action, reward, new_state))
@@ -291,6 +308,13 @@ def process_minibatch(minibatch, model):
     for memory in minibatch:
         # Get stored values.
         old_state_m, action_m, reward_m, new_state_m = memory
+        # print('old_state_m:')
+        # print(old_state_m)
+        # print('action_m:')
+        # print(action_m)
+        # print(reward_m)
+        # print(new_state_m)
+
         # Get prediction on old state.
         old_qval = model.predict(old_state_m, batch_size=1)
         # Get prediction on new state.
