@@ -14,6 +14,7 @@ pygame.init()
 
 # X_DIM, Y_DIM = (5,5)
 
+
 def play_grid(model):
 
     grid = Grid(X_DIM, Y_DIM)
@@ -25,15 +26,16 @@ def play_grid(model):
 
     for i in range(Y_DIM):
         for j in range(X_DIM):
-            fake_state = np.zeros((1,X_DIM*Y_DIM))
-            k = (i*X_DIM)+j
+            fake_state = np.zeros((1, X_DIM * Y_DIM))
+            k = (i * X_DIM) + j
             fake_state[0][k] = 1
-            action_grid[i][j] = np.argmax(model.predict(fake_state,batch_size=1))
+            action_grid[i][j] = np.argmax(
+                model.predict(fake_state, batch_size=1))
 
     for i in range(Y_DIM):
         line = '| '
         for j in range(X_DIM):
-            if [j,i] == game_state.goal:
+            if [j, i] == game_state.goal:
                 line += '$ | '
             elif action_grid[i][j] == 2:
                 line += 'v | '
@@ -60,17 +62,17 @@ def play_grid(model):
 
 
 def play_lane_following(model):
-    rate = 10 #Hz
-    screen = pygame.display.set_mode((1300,600))
+    rate = 10  # Hz
+    screen = pygame.display.set_mode((1300, 600))
     pygame.display.set_caption("mdeyo car sim")
     background = pygame.Surface(screen.get_size())
     background.fill((0, 0, 0))
-    RED  = ( 255,   0,   0)
-    car = Car2(RED,60,385,screen,100)
-    road = CurvedRoad(1200,60,385,'45')
+    RED = (255,   0,   0)
+    car = Car2(RED, 60, 385, screen, 100)
+    road = CurvedRoad(1200, 60, 385, '45')
     car.constant_speed = True
     state = road.getState(car)
-    print('state:',state)
+    print('state:', state)
 
     # Move.
     while True:
@@ -81,12 +83,12 @@ def play_lane_following(model):
         # Take action, observe new state and get our treat.
         print(action)
         car.takeAction(action)
-        car.update(1/rate)
+        car.update(1 / rate)
         road.plotRoad(screen)
 
         state = road.getState(car)
         print(state)
-        (car_reward,done) = road.reward(car)
+        (car_reward, done) = road.reward(car)
         # --- Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
 
@@ -94,7 +96,7 @@ def play_lane_following(model):
         # clock.tick(rate)
         print(car_reward)
 
-        time.sleep(0.1)
+        # time.sleep(0.1)
 
 
 if __name__ == "__main__":
@@ -102,20 +104,22 @@ if __name__ == "__main__":
     # model = neural_net(25, [82, 75], saved_model)
     # play_grid(model)
 
-    nn = [12,8]
+    nn = [164, 41]
     num_input = 3
 
-    saved_model = 'saved-models/lane_following-'+str(nn[0])+'n-'+str(nn[1])+'n-4000frames-50-50000buffer-rms-4000.h5'
+    saved_model = 'saved-models/lane_following-' + \
+        str(nn[0]) + 'n-' + str(nn[1]) + \
+        'n-10000frames-50-50000buffer-rms-6000.h5'
     params = {
-        'nodes1':nn[0],
-        'nodes2':nn[1],
-        'x_dim':X_DIM,
-        'y_dim':Y_DIM,
+        'nodes1': nn[0],
+        'nodes2': nn[1],
+        'x_dim': X_DIM,
+        'y_dim': Y_DIM,
         "batchSize": 100,
         "buffer": 50000,
         "nn": nn,
-        'solver':'rms',
-        'num_actions':3
+        'solver': 'rms',
+        'num_actions': 3
     }
     model = neural_net(num_input, params, saved_model)
     play_lane_following(model)
