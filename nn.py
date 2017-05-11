@@ -5,15 +5,13 @@ http://outlace.com/Reinforcement-Learning-Part-3/
 
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Dropout
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adagrad
 from keras.layers.recurrent import LSTM
 from keras.callbacks import Callback
 
 # Adding this per a suggestion by Tim Kelch.
 # https://medium.com/@trkelch/this-post-is-great-possibly-the-best-tutorial-explanation-ive-found-thus-far-cf78886b5378#.w473ywtbw
 import tensorflow as tf
-#tf.python.control_flow_ops = tf
-
 
 class LossHistory(Callback):
     def on_train_begin(self, logs={}):
@@ -23,27 +21,35 @@ class LossHistory(Callback):
         self.losses.append(logs.get('loss'))
 
 
-def neural_net(num_sensors, params, load=''):
+def neural_net(input_size, params, load=''):
     model = Sequential()
 
     # First layer.
     model.add(Dense(
-        params[0], init='lecun_uniform', input_shape=(num_sensors,)
+        params['nodes1'], kernel_initializer='lecun_uniform', input_shape=(input_size,),activation='relu'
     ))
-    model.add(Activation('relu'))
+    # model.add(Activation('relu'))
     model.add(Dropout(0.2))
 
-    # Second layer.
-    model.add(Dense(params[1], init='lecun_uniform'))
-    model.add(Activation('relu'))
-    model.add(Dropout(0.2))
+    if(params['nodes2']!=0):
+        # Second layer.
+        model.add(Dense(params['nodes2'], kernel_initializer='lecun_uniform', activation='relu'))
+        model.add(Dropout(0.2))
 
     # Output layer.
-    model.add(Dense(3, init='lecun_uniform'))
-    model.add(Activation('linear'))
+    model.add(Dense(params['num_actions'], kernel_initializer='lecun_uniform',activation='softmax'))
+    # model.add(Activation('linear'))
 
-    rms = RMSprop()
-    model.compile(loss='mse', optimizer=rms)
+    solver = params['solver']
+
+    if(solver=='rms'):
+        rms = RMSprop()
+        model.compile(loss='mse', optimizer=rms)
+    elif(solver=='ada'):
+        ada = Adagrad()
+        model.compile(loss='mse', optimizer=ada)
+    else:
+        raise(ValueError('no solver built'))
 
     if load:
         model.load_weights(load)
@@ -51,10 +57,10 @@ def neural_net(num_sensors, params, load=''):
     return model
 
 
-def lstm_net(num_sensors, load=False):
+def lstm_net(input_size, load=False):
     model = Sequential()
     model.add(LSTM(
-        output_dim=512, input_dim=num_sensors, return_sequences=True
+        output_dim=512, input_dim=input_size, return_sequences=True
     ))
     model.add(Dropout(0.2))
     model.add(LSTM(output_dim=512, input_dim=512, return_sequences=False))
